@@ -1,0 +1,19 @@
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary logs & debug files
+*.log
+out.log
+debug_import.py
+test_blood_donors.db
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE / Editor config
+.vscode/
+.idea/
