@@ -4,8 +4,8 @@ import database
 sys.stdout.reconfigure(encoding='utf-8')
 
 new_survey_donors = [
-    # ACCF (1)
-    {"name": "নুসরাত জাহান উমি", "phone": "01829769453", "department": "ACCF", "session_val": "2025-26", "blood_group": "B+", "is_badhon_member": False},
+    # ACCE (1)
+    {"name": "নুসরাত জাহান উমি", "phone": "01829769453", "department": "ACCE", "session_val": "2025-26", "blood_group": "B+", "is_badhon_member": False},
 
     # ECO (14)
     {"name": "হৃদয় সরকার", "phone": "01871828716", "department": "ECO", "session_val": "2025-26", "blood_group": "B+", "is_badhon_member": False},

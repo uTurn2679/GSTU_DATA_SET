@@ -34,10 +34,10 @@ willing_donors = [
     {"name": "রাকিব হাসান", "phone": "01738290328", "department": "CSE", "session_val": "2025-26", "blood_group": "O+", "is_badhon_member": False},
     {"name": "জয়", "phone": "01570209978", "department": "CSE", "session_val": "2025-26", "blood_group": "O+", "is_badhon_member": False},
 
-    # ACCF (3)
-    {"name": "মো: ইমন", "phone": "01773375236", "department": "ACCF", "session_val": "2025-26", "blood_group": "O+", "is_badhon_member": False},
-    {"name": "ফয়সাল", "phone": "01315017235", "department": "ACCF", "session_val": "2025-26", "blood_group": "B+", "is_badhon_member": True},
-    {"name": "ইব্রাহিম", "phone": "01860730255", "department": "ACCF", "session_val": "2025-26", "blood_group": "O+", "is_badhon_member": False},
+    # ACCE (3)
+    {"name": "মো: ইমন", "phone": "01773375236", "department": "ACCE", "session_val": "2025-26", "blood_group": "O+", "is_badhon_member": False},
+    {"name": "ফয়সাল", "phone": "01315017235", "department": "ACCE", "session_val": "2025-26", "blood_group": "B+", "is_badhon_member": True},
+    {"name": "ইব্রাহিম", "phone": "01860730255", "department": "ACCE", "session_val": "2025-26", "blood_group": "O+", "is_badhon_member": False},
 
     # Psychology (5)
     {"name": "মো: সুজন (রাশেদ)", "phone": "01992068493", "department": "Psychology", "session_val": "2025-26", "blood_group": "AB+", "is_badhon_member": False},
