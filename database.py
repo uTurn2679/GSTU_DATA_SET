@@ -41,7 +41,7 @@ def init_db():
         );
     ''')
 
-    # Users Table (Admin, Sub-Admin, Member)
+    # Users Table (Admin, Sub-Admin)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,37 +53,15 @@ def init_db():
         );
     ''')
 
-    # Blood Requests Table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS blood_requests (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            patient_name TEXT NOT NULL,
-            blood_group TEXT NOT NULL,
-            hospital_location TEXT NOT NULL,
-            contact_phone TEXT NOT NULL,
-            date_needed TEXT NOT NULL,
-            units_needed INTEGER DEFAULT 1,
-            status TEXT DEFAULT 'Pending',
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP
-        );
-    ''')
-
     conn.commit()
 
-    # Seed Default Super Admin and Member accounts if not present
+    # Seed Default Super Admin if not present
     cursor.execute("SELECT COUNT(*) as count FROM users WHERE username = ?", ('HABIB2679',))
     if cursor.fetchone()['count'] == 0:
         cursor.execute('''
             INSERT INTO users (username, password, role, full_name)
             VALUES (?, ?, ?, ?)
         ''', ('HABIB2679', '233134', 'admin', 'Super Admin Habib'))
-
-    cursor.execute("SELECT COUNT(*) as count FROM users WHERE username = ?", ('member',))
-    if cursor.fetchone()['count'] == 0:
-        cursor.execute('''
-            INSERT INTO users (username, password, role, full_name)
-            VALUES (?, ?, ?, ?)
-        ''', ('member', 'member123', 'member', 'General Member'))
 
     conn.commit()
     conn.close()
@@ -134,36 +112,7 @@ def delete_user(user_id):
     conn.commit()
     conn.close()
 
-# Blood Requests Functions
-def add_blood_request(patient_name, blood_group, hospital_location, contact_phone, date_needed, units_needed=1):
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO blood_requests (patient_name, blood_group, hospital_location, contact_phone, date_needed, units_needed, status)
-        VALUES (?, ?, ?, ?, ?, ?, 'Pending')
-    ''', (patient_name, blood_group, hospital_location, contact_phone, date_needed, units_needed))
-    conn.commit()
-    req_id = cursor.lastrowid
-    conn.close()
-    return req_id
 
-def get_blood_requests(status=None):
-    conn = get_db()
-    cursor = conn.cursor()
-    if status:
-        cursor.execute("SELECT * FROM blood_requests WHERE status = ? ORDER BY id DESC", (status,))
-    else:
-        cursor.execute("SELECT * FROM blood_requests ORDER BY id DESC")
-    rows = cursor.fetchall()
-    conn.close()
-    return rows
-
-def update_request_status(request_id, new_status):
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("UPDATE blood_requests SET status = ? WHERE id = ?", (new_status, request_id))
-    conn.commit()
-    conn.close()
 
 # Donor Management Functions
 def get_donors(search=None, blood_group=None, department=None, session_val=None, badhon=None, availability=None):
@@ -371,9 +320,6 @@ def get_stats():
     cursor.execute("SELECT blood_group, COUNT(*) as count FROM donors GROUP BY blood_group")
     group_counts = {r['blood_group']: r['count'] for r in cursor.fetchall()}
 
-    cursor.execute("SELECT COUNT(*) as pending FROM blood_requests WHERE status = 'Pending'")
-    pending_requests_count = cursor.fetchone()['pending']
-
     conn.close()
 
     return {
@@ -383,6 +329,5 @@ def get_stats():
         'total_donations_sum': total_donations_sum,
         'departments': departments,
         'sessions': sessions,
-        'group_counts': group_counts,
-        'pending_requests_count': pending_requests_count
+        'group_counts': group_counts
     }

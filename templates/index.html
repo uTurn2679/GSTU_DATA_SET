@@ -1,39 +1,38 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - GSTU Blood Donor Database{% endblock %}
+{% block title %}Admin Dashboard - GSTU Blood Donor Database{% endblock %}
 
 {% block content %}
 
-{% if not current_user %}
-    <!-- Public Guest Hero Banner -->
-    <div class="bg-gradient-to-r from-brand-900 via-brand-800 to-gray-900 text-white p-8 md:p-12 rounded-3xl shadow-xl mb-10 text-center relative overflow-hidden">
-        <div class="max-w-3xl mx-auto space-y-4 relative z-10">
-            <span class="px-4 py-1.5 bg-red-500/30 text-red-200 border border-red-400/40 rounded-full text-xs font-extrabold uppercase tracking-wider">
-                GSTU Badhon Voluntary Donors Network
+<!-- Top Header Banner for Logged-in Admin / Sub-Admin -->
+<div class="bg-gradient-to-r from-gray-900 via-gray-800 to-brand-900 text-white p-6 md:p-8 rounded-3xl shadow-xl mb-8 flex flex-wrap items-center justify-between gap-4">
+    <div>
+        <div class="flex items-center space-x-2">
+            <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider {% if current_user.role == 'admin' %}bg-amber-500 text-gray-950{% else %}bg-purple-600 text-white{% endif %}">
+                {% if current_user.role == 'admin' %}👑 Super Admin{% else %}⚡ Sub-Admin{% endif %}
             </span>
-            <h2 class="text-3xl md:text-5xl font-black tracking-tight leading-tight">Need Urgent Blood in Emergency?</h2>
-            <p class="text-sm md:text-base text-red-100 max-w-2xl mx-auto">
-                Public visitors can submit emergency blood requests directly to Badhon administrators.
-                Donor directory details are protected and accessible to registered members and admins.
-            </p>
-            <div class="flex flex-wrap items-center justify-center gap-4 pt-4">
-                <a href="{{ url_for('request_blood') }}" class="px-6 py-3.5 bg-white text-brand-800 hover:bg-red-50 font-black rounded-xl text-sm shadow-lg transition flex items-center space-x-2">
-                    <i class="fa-solid fa-hand-holding-medical text-brand-600 text-base"></i>
-                    <span>Request Emergency Blood</span>
-                </a>
-                <a href="{{ url_for('login') }}" class="px-6 py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-black rounded-xl text-sm shadow-lg transition flex items-center space-x-2 border border-brand-500">
-                    <i class="fa-solid fa-right-to-bracket"></i>
-                    <span>Member / Admin Login</span>
-                </a>
-            </div>
+            <span class="text-xs text-gray-300">Logged in as <strong class="text-white">{{ current_user.full_name }} ({{ current_user.username }})</strong></span>
         </div>
+        <h2 class="text-2xl md:text-3xl font-black mt-2">GSTU Donor Management Dashboard</h2>
+        <p class="text-xs md:text-sm text-gray-300 mt-1">Search blood donors, manage 10-donation history, export CSV, and manage sub-admins.</p>
     </div>
-{% endif %}
+
+    <div class="flex flex-wrap items-center gap-3">
+        <a href="{{ url_for('register') }}" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold text-xs shadow transition flex items-center space-x-2 border border-brand-500">
+            <i class="fa-solid fa-user-plus"></i>
+            <span>Register New Donor</span>
+        </a>
+        <a href="{{ url_for('export_csv') }}" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow transition flex items-center space-x-2 border border-emerald-500">
+            <i class="fa-solid fa-file-csv"></i>
+            <span>Export CSV</span>
+        </a>
+    </div>
+</div>
 
 <!-- Summary Stats Row -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-    <a href="{% if current_user %}{{ url_for('index', search=search_query, blood_group=selected_blood_group, department=selected_department, session=selected_session, badhon=selected_badhon) }}{% else %}#{% endif %}"
-       class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 hover:border-gray-400 transition flex items-center justify-between group">
+    <a href="{{ url_for('index', search=search_query, blood_group=selected_blood_group, department=selected_department, session=selected_session, badhon=selected_badhon) }}"
+       class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 hover:border-gray-400 transition flex items-center justify-between group">
         <div>
             <p class="text-xs font-semibold uppercase text-gray-500 tracking-wider">Total Donors</p>
             <h3 class="text-3xl font-extrabold text-gray-900 mt-1">{{ total_donors }}</h3>
@@ -43,8 +42,8 @@
         </div>
     </a>
 
-    <a href="{% if current_user %}{{ url_for('index', availability='available', search=search_query, blood_group=selected_blood_group, department=selected_department, session=selected_session, badhon=selected_badhon) }}{% else %}#{% endif %}"
-       class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 hover:border-emerald-400 transition flex items-center justify-between group {% if selected_availability == 'available' %}ring-2 ring-emerald-500{% endif %}">
+    <a href="{{ url_for('index', availability='available', search=search_query, blood_group=selected_blood_group, department=selected_department, session=selected_session, badhon=selected_badhon) }}"
+       class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 hover:border-emerald-400 transition flex items-center justify-between group {% if selected_availability == 'available' %}ring-2 ring-emerald-500{% endif %}">
         <div>
             <p class="text-xs font-semibold uppercase text-gray-500 tracking-wider">Available Now</p>
             <h3 class="text-3xl font-extrabold text-emerald-600 mt-1">{{ available_donors_count }}</h3>
@@ -54,7 +53,7 @@
         </div>
     </a>
 
-    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex items-center justify-between">
+    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex items-center justify-between">
         <div>
             <p class="text-xs font-semibold uppercase text-gray-500 tracking-wider">Total Donations Made</p>
             <h3 class="text-3xl font-extrabold text-brand-700 mt-1">{{ total_donations_sum }}</h3>
@@ -64,8 +63,8 @@
         </div>
     </div>
 
-    <a href="{% if current_user %}{{ url_for('index', badhon='yes', search=search_query, blood_group=selected_blood_group, department=selected_department, session=selected_session, availability=selected_availability) }}{% else %}#{% endif %}"
-       class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 hover:border-purple-400 transition flex items-center justify-between group {% if selected_badhon == 'yes' %}ring-2 ring-purple-500{% endif %}">
+    <a href="{{ url_for('index', badhon='yes', search=search_query, blood_group=selected_blood_group, department=selected_department, session=selected_session, availability=selected_availability) }}"
+       class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 hover:border-purple-400 transition flex items-center justify-between group {% if selected_badhon == 'yes' %}ring-2 ring-purple-500{% endif %}">
         <div>
             <p class="text-xs font-semibold uppercase text-gray-500 tracking-wider">Badhon Members</p>
             <h3 class="text-3xl font-extrabold text-purple-700 mt-1">{{ badhon_members_count }}</h3>
@@ -76,320 +75,352 @@
     </a>
 </div>
 
-<!-- Blood Group & Availability Quick Filter Bar -->
-<div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-8 space-y-4">
+<!-- Blood Group Quick Filter Pills -->
+<div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 mb-8 space-y-4">
     <div>
-        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Available Donors by Blood Group</p>
+        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Filter Donors by Blood Group</p>
         <div class="flex flex-wrap gap-2">
-            {% if current_user %}
-                <a href="{{ url_for('index', search=search_query, department=selected_department, session=selected_session, badhon=selected_badhon, availability=selected_availability) }}"
-                   class="px-3 py-1.5 rounded-lg text-xs font-bold transition border {% if not selected_blood_group %}bg-brand-700 text-white border-brand-700{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200 border-gray-300{% endif %}">
-                    ALL GROUPS
-                </a>
-            {% endif %}
+            <a href="{{ url_for('index', search=search_query, department=selected_department, session=selected_session, badhon=selected_badhon, availability=selected_availability) }}"
+               class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition border {% if not selected_blood_group %}bg-brand-700 text-white border-brand-700 shadow-sm{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200 border-gray-300{% endif %}">
+                ALL GROUPS
+            </a>
             {% for bg in blood_groups %}
-                {% if current_user %}
-                    <a href="{{ url_for('index', blood_group=bg, search=search_query, department=selected_department, session=selected_session, badhon=selected_badhon, availability=selected_availability) }}"
-                       class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition border flex items-center space-x-1.5 {% if selected_blood_group == bg %}bg-brand-600 text-white border-brand-600 shadow-sm{% else %}bg-white text-gray-800 hover:bg-red-50 border-gray-300{% endif %}">
-                        <span>{{ bg }}</span>
-                        <span class="px-1.5 py-0.5 rounded-full text-[10px] {% if selected_blood_group == bg %}bg-white text-brand-700{% else %}bg-red-100 text-brand-700{% endif %}">
-                            {{ group_stats.get(bg, 0) }}
-                        </span>
-                    </a>
-                {% else %}
-                    <div class="px-3.5 py-1.5 rounded-lg text-xs font-bold border flex items-center space-x-1.5 bg-white text-gray-800 border-gray-200">
-                        <span>{{ bg }}</span>
-                        <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-red-100 text-brand-700">
-                            {{ group_stats.get(bg, 0) }}
-                        </span>
-                    </div>
-                {% endif %}
+                <a href="{{ url_for('index', blood_group=bg, search=search_query, department=selected_department, session=selected_session, badhon=selected_badhon, availability=selected_availability) }}"
+                   class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition border flex items-center space-x-1.5 {% if selected_blood_group == bg %}bg-brand-600 text-white border-brand-600 shadow-sm{% else %}bg-white text-gray-800 hover:bg-red-50 border-gray-300{% endif %}">
+                    <span>{{ bg }}</span>
+                    <span class="px-1.5 py-0.5 rounded-full text-[10px] {% if selected_blood_group == bg %}bg-white text-brand-700{% else %}bg-red-100 text-brand-700{% endif %}">
+                        {{ group_stats.get(bg, 0) }}
+                    </span>
+                </a>
             {% endfor %}
         </div>
     </div>
 </div>
 
-{% if current_user %}
-    <!-- Search & Detailed Filter Controls for Logged-in Users -->
-    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 mb-8">
-        <form method="GET" action="{{ url_for('index') }}" class="space-y-4" id="filterForm">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
-                
-                <div class="lg:col-span-2">
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Search Donor</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                        </span>
-                        <input type="text" name="search" value="{{ search_query }}" placeholder="Name, Dept, Session, Phone..."
-                               class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Blood Group</label>
-                    <select name="blood_group" onchange="this.form.submit()" class="w-full py-2 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500">
-                        <option value="">All Groups</option>
-                        {% for bg in blood_groups %}
-                            <option value="{{ bg }}" {% if selected_blood_group == bg %}selected{% endif %}>{{ bg }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Department</label>
-                    <select name="department" onchange="this.form.submit()" class="w-full py-2 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500">
-                        <option value="">All Departments</option>
-                        {% for dept in departments %}
-                            <option value="{{ dept }}" {% if selected_department == dept %}selected{% endif %}>{{ dept }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Session</label>
-                    <select name="session" onchange="this.form.submit()" class="w-full py-2 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500">
-                        <option value="">All Sessions</option>
-                        {% for sess in sessions %}
-                            <option value="{{ sess }}" {% if selected_session == sess %}selected{% endif %}>{{ sess }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Badhon Member</label>
-                    <select name="badhon" onchange="this.form.submit()" class="w-full py-2 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500">
-                        <option value="">All</option>
-                        <option value="yes" {% if selected_badhon == 'yes' %}selected{% endif %}>Member Only</option>
-                        <option value="no" {% if selected_badhon == 'no' %}selected{% endif %}>Non-Member</option>
-                    </select>
+<!-- Search & Detailed Filter Controls -->
+<div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 mb-8">
+    <form method="GET" action="{{ url_for('index') }}" class="space-y-4" id="filterForm">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
+            
+            <div class="lg:col-span-2">
+                <label class="block text-xs font-bold text-gray-700 mb-1">Search Donor</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" name="search" value="{{ search_query }}" placeholder="Name, Dept, Session, Phone..."
+                           class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500">
                 </div>
             </div>
 
-            <div class="flex items-center justify-between border-t border-gray-100 pt-3">
-                <div class="flex items-center space-x-4">
-                    <label class="inline-flex items-center text-xs font-medium text-gray-600 cursor-pointer">
-                        <input type="radio" name="availability" value="" {% if not selected_availability %}checked{% endif %} onchange="this.form.submit()" class="text-brand-600 focus:ring-brand-500">
-                        <span class="ml-1.5">All Status</span>
-                    </label>
-                    <label class="inline-flex items-center text-xs font-medium text-emerald-700 cursor-pointer">
-                        <input type="radio" name="availability" value="available" {% if selected_availability == 'available' %}checked{% endif %} onchange="this.form.submit()" class="text-emerald-600 focus:ring-emerald-500">
-                        <span class="ml-1.5 font-bold">Available Only</span>
-                    </label>
-                    <label class="inline-flex items-center text-xs font-medium text-gray-600 cursor-pointer">
-                        <input type="radio" name="availability" value="unavailable" {% if selected_availability == 'unavailable' %}checked{% endif %} onchange="this.form.submit()" class="text-gray-500 focus:ring-gray-400">
-                        <span class="ml-1.5 font-bold">Unavailable Only</span>
-                    </label>
-                </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Blood Group</label>
+                <select name="blood_group" onchange="this.form.submit()" class="w-full py-2 px-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <option value="">All Groups</option>
+                    {% for bg in blood_groups %}
+                        <option value="{{ bg }}" {% if selected_blood_group == bg %}selected{% endif %}>{{ bg }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-                <div class="flex items-center space-x-2">
-                    <a href="{{ url_for('index') }}" class="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
-                        Reset Filters
-                    </a>
-                    <button type="submit" class="px-4 py-1.5 text-xs font-semibold bg-brand-600 hover:bg-brand-700 text-white rounded-lg transition shadow-sm flex items-center space-x-1.5">
-                        <i class="fa-solid fa-filter"></i>
-                        <span>Apply Filters</span>
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Department</label>
+                <select name="department" onchange="this.form.submit()" class="w-full py-2 px-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept }}" {% if selected_department == dept %}selected{% endif %}>{{ dept }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Session</label>
+                <select name="session" onchange="this.form.submit()" class="w-full py-2 px-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <option value="">All Sessions</option>
+                    {% for sess in sessions %}
+                        <option value="{{ sess }}" {% if selected_session == sess %}selected{% endif %}>{{ sess }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Badhon Member</label>
+                <select name="badhon" onchange="this.form.submit()" class="w-full py-2 px-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <option value="">All</option>
+                    <option value="yes" {% if selected_badhon == 'yes' %}selected{% endif %}>Member Only</option>
+                    <option value="no" {% if selected_badhon == 'no' %}selected{% endif %}>Non-Member</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-between border-t border-gray-100 pt-3">
+            <div class="flex items-center space-x-4">
+                <label class="inline-flex items-center text-xs font-medium text-gray-600 cursor-pointer">
+                    <input type="radio" name="availability" value="" {% if not selected_availability %}checked{% endif %} onchange="this.form.submit()" class="text-brand-600 focus:ring-brand-500">
+                    <span class="ml-1.5 font-bold">All Status</span>
+                </label>
+                <label class="inline-flex items-center text-xs font-medium text-emerald-700 cursor-pointer">
+                    <input type="radio" name="availability" value="available" {% if selected_availability == 'available' %}checked{% endif %} onchange="this.form.submit()" class="text-emerald-600 focus:ring-emerald-500">
+                    <span class="ml-1.5 font-extrabold">Available Only</span>
+                </label>
+                <label class="inline-flex items-center text-xs font-medium text-gray-600 cursor-pointer">
+                    <input type="radio" name="availability" value="unavailable" {% if selected_availability == 'unavailable' %}checked{% endif %} onchange="this.form.submit()" class="text-gray-500 focus:ring-gray-400">
+                    <span class="ml-1.5 font-extrabold">Unavailable Only</span>
+                </label>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <a href="{{ url_for('index') }}" class="px-3.5 py-1.5 text-xs font-bold text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-xl transition">
+                    Reset Filters
+                </a>
+                <button type="submit" class="px-4 py-1.5 text-xs font-bold bg-brand-600 hover:bg-brand-700 text-white rounded-xl transition shadow-sm flex items-center space-x-1.5">
+                    <i class="fa-solid fa-filter"></i>
+                    <span>Apply Search</span>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Donor Directory Table -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-10">
+    <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+        <div>
+            <h2 class="text-base font-black text-gray-800 flex items-center space-x-2">
+                <span>Donor Directory</span>
+                <span class="px-2.5 py-0.5 rounded-full text-xs bg-red-100 text-brand-800 font-extrabold">{{ donors|length }} Donors Listed</span>
+            </h2>
+            <p class="text-xs text-gray-500 mt-0.5"><i class="fa-solid fa-circle-info mr-1 text-brand-600"></i> Click on any donor row to view their detailed profile & 10-donation history pop-up</p>
+        </div>
+        <a href="{{ url_for('register') }}" class="text-xs font-bold text-brand-600 hover:text-brand-800 flex items-center space-x-1 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-xl border border-red-200 transition">
+            <i class="fa-solid fa-plus"></i>
+            <span>Add New Donor</span>
+        </a>
+    </div>
+
+    {% if donors %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-500 uppercase text-[11px] font-extrabold tracking-wider border-b border-gray-200">
+                        <th class="py-3 px-4">Group</th>
+                        <th class="py-3 px-4">Donor Info</th>
+                        <th class="py-3 px-4">Dept & Session</th>
+                        <th class="py-3 px-4">Badhon Member</th>
+                        <th class="py-3 px-4">Last Donation</th>
+                        <th class="py-3 px-4 text-center">Total Donations</th>
+                        <th class="py-3 px-4">Availability</th>
+                        <th class="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 text-sm">
+                    {% for donor in donors %}
+                        {% set history_list = donor_histories.get(donor.id, []) %}
+                        <tr class="hover:bg-red-50/50 transition cursor-pointer"
+                            onclick="openDonorModal(this)"
+                            data-id="{{ donor.id }}"
+                            data-name="{{ donor.name }}"
+                            data-blood-group="{{ donor.blood_group }}"
+                            data-department="{{ donor.department }}"
+                            data-session="{{ donor.session }}"
+                            data-phone="{{ donor.phone }}"
+                            data-last-donation="{{ donor.last_donation_date if donor.last_donation_date else '' }}"
+                            data-total-donations="{{ donor.total_donations if donor.total_donations is not none else '' }}"
+                            data-is-badhon="{{ 1 if donor.is_badhon_member else 0 }}"
+                            data-is-available="{{ 1 if donor.is_available else 0 }}"
+                            data-history='[
+                                {% for h in history_list %}
+                                    {"donation_date": "{{ h.donation_date }}"}{% if not loop.last %},{% endif %}
+                                {% endfor %}
+                            ]'>
+                            
+                            <!-- Blood Group Badge -->
+                            <td class="py-3.5 px-4">
+                                <span class="inline-flex items-center justify-center px-3 py-1.5 rounded-xl font-black text-sm shadow-sm bg-brand-600 text-white">
+                                    {{ donor.blood_group }}
+                                </span>
+                            </td>
+
+                            <!-- Donor Info (Name & Phone) -->
+                            <td class="py-3.5 px-4">
+                                <div class="font-extrabold text-gray-900 hover:text-brand-600 transition flex items-center space-x-1.5">
+                                    <span>{{ donor.name }}</span>
+                                    <i class="fa-solid fa-up-right-from-square text-[10px] text-gray-400"></i>
+                                </div>
+                                <a href="tel:{{ donor.phone }}" onclick="event.stopPropagation();" class="text-xs text-brand-700 font-bold hover:underline flex items-center space-x-1 mt-0.5">
+                                    <i class="fa-solid fa-phone text-[10px]"></i>
+                                    <span>{{ donor.phone }}</span>
+                                </a>
+                            </td>
+
+                            <!-- Dept & Session -->
+                            <td class="py-3.5 px-4">
+                                <div class="font-bold text-gray-800">{{ donor.department }}</div>
+                                <div class="text-xs text-gray-500">Session: {{ donor.session }}</div>
+                            </td>
+
+                            <!-- Badhon Member Badge -->
+                            <td class="py-3.5 px-4">
+                                {% if donor.is_badhon_member %}
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-extrabold bg-purple-100 text-purple-800 border border-purple-200">
+                                        <i class="fa-solid fa-award mr-1"></i> Badhon Member
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs text-gray-400 font-medium bg-gray-50">
+                                        Non-Member
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Last Donation Date -->
+                            <td class="py-3.5 px-4 text-gray-700">
+                                {% if donor.last_donation_date %}
+                                    <span class="font-bold text-xs flex items-center space-x-1">
+                                        <span>{{ donor.last_donation_date }}</span>
+                                        {% if history_list|length > 1 %}
+                                            <i class="fa-solid fa-clock-rotate-left text-[10px] text-brand-600"></i>
+                                        {% endif %}
+                                    </span>
+                                {% else %}
+                                    <span class="text-xs text-gray-400 italic">N/A</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Total Donations Count -->
+                            <td class="py-3.5 px-4 text-center">
+                                {% if donor.total_donations is not none and donor.total_donations != '' %}
+                                    <span class="inline-block px-2.5 py-1 rounded-lg text-xs font-extrabold {% if donor.total_donations > 0 %}bg-red-100 text-brand-800{% else %}bg-gray-100 text-gray-500{% endif %}">
+                                        {{ donor.total_donations }} times
+                                    </span>
+                                {% else %}
+                                    <span class="inline-block px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-400 italic">
+                                        N/A
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Availability Toggle -->
+                            <td class="py-3.5 px-4" onclick="event.stopPropagation();">
+                                <form method="POST" action="{{ url_for('toggle_status', id=donor.id) }}">
+                                    <button type="submit" title="Click to toggle availability"
+                                            class="px-2.5 py-1 rounded-full text-xs font-extrabold transition flex items-center space-x-1.5 border {% if donor.is_available %}bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100{% else %}bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200{% endif %}">
+                                        <span class="w-2 h-2 rounded-full {% if donor.is_available %}bg-emerald-500 animate-pulse{% else %}bg-gray-400{% endif %}"></span>
+                                        <span>{% if donor.is_available %}Available{% else %}Unavailable{% endif %}</span>
+                                    </button>
+                                </form>
+                            </td>
+
+                            <!-- Actions (Edit / Delete) -->
+                            <td class="py-3.5 px-4 text-right" onclick="event.stopPropagation();">
+                                <div class="flex items-center justify-end space-x-2">
+                                    <a href="{{ url_for('edit_donor', id=donor.id) }}" class="p-1.5 text-gray-500 hover:text-brand-600 hover:bg-red-50 rounded-lg transition" title="Edit Donor Profile & History">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </a>
+                                    <form method="POST" action="{{ url_for('delete_donor', id=donor.id) }}" onsubmit="return confirm('Are you sure you want to delete donor {{ donor.name }}?');">
+                                        <button type="submit" class="p-1.5 text-gray-400 hover:text-red-700 hover:bg-red-50 rounded-lg transition" title="Delete Donor">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="p-12 text-center text-gray-500">
+            <i class="fa-solid fa-user-slash text-4xl text-gray-300 mb-3"></i>
+            <p class="text-base font-semibold text-gray-700">No donor records match your search criteria</p>
+            <p class="text-xs text-gray-500 mt-1">Try clearing or resetting filters.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Create & Manage Sub-Admins (Exclusive to Super Admin HABIB2679) -->
+{% if current_user.role == 'admin' %}
+    <div id="subadmin-section" class="bg-white rounded-3xl shadow-md border border-purple-200 p-6 md:p-8 mb-10">
+        <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+            <div>
+                <h3 class="text-xl font-black text-gray-900 flex items-center space-x-2">
+                    <i class="fa-solid fa-user-shield text-purple-600"></i>
+                    <span>Sub-Admin Account Management</span>
+                </h3>
+                <p class="text-xs text-gray-500 mt-1">As Super Admin ({{ current_user.username }}), you can create and manage Sub-Admin accounts.</p>
+            </div>
+            <span class="px-3 py-1 bg-purple-100 text-purple-800 font-extrabold text-xs rounded-full border border-purple-200">
+                {{ subadmins|length }} Sub-Admins Active
+            </span>
+        </div>
+
+        <!-- Create Sub-Admin Form -->
+        <form method="POST" action="{{ url_for('create_subadmin') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-purple-50/60 p-5 rounded-2xl border border-purple-100">
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Sub-Admin Full Name</label>
+                <input type="text" name="full_name" required placeholder="e.g. Tanvir Ahmed"
+                       class="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white font-semibold">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Username</label>
+                <input type="text" name="username" required placeholder="e.g. tanvir_subadmin"
+                       class="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white font-semibold">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Password</label>
+                <div class="flex space-x-2">
+                    <input type="password" name="password" required placeholder="••••••••"
+                           class="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white">
+                    <button type="submit" class="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl transition shadow flex-shrink-0 flex items-center space-x-1">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Create Account</span>
                     </button>
                 </div>
             </div>
         </form>
-    </div>
 
-    <!-- Donor Directory Data Table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <div>
-                <h2 class="text-base font-bold text-gray-800 flex items-center space-x-2">
-                    <span>Donor Directory</span>
-                    <span class="px-2.5 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700 font-semibold">{{ donors|length }} Donors Listed</span>
-                </h2>
-                <p class="text-xs text-gray-400 mt-0.5"><i class="fa-solid fa-circle-info mr-1"></i> Click on any donor to view their full profile & donation history</p>
-            </div>
-            {% if current_user.role in ['admin', 'subadmin'] %}
-                <a href="{{ url_for('register') }}" class="text-xs font-semibold text-brand-600 hover:text-brand-800 flex items-center space-x-1">
-                    <i class="fa-solid fa-plus"></i>
-                    <span>Add Donor</span>
-                </a>
-            {% endif %}
-        </div>
-
-        {% if donors %}
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+        <!-- Active Sub-Admins List -->
+        {% if subadmins %}
+            <div class="overflow-x-auto rounded-2xl border border-gray-200">
+                <table class="w-full text-left text-sm border-collapse">
                     <thead>
-                        <tr class="bg-gray-50 text-gray-500 uppercase text-[11px] font-bold tracking-wider border-b border-gray-200">
-                            <th class="py-3 px-4">Blood Group</th>
-                            <th class="py-3 px-4">Donor Info</th>
-                            <th class="py-3 px-4">Dept & Session</th>
-                            <th class="py-3 px-4">Badhon Member</th>
-                            <th class="py-3 px-4">Last Donation</th>
-                            <th class="py-3 px-4 text-center">Total Donations</th>
-                            <th class="py-3 px-4">Availability</th>
-                            {% if current_user.role in ['admin', 'subadmin'] %}
-                                <th class="py-3 px-4 text-right">Actions</th>
-                            {% endif %}
+                        <tr class="bg-gray-50 text-gray-600 text-xs font-bold uppercase tracking-wider border-b border-gray-200">
+                            <th class="py-3 px-4">Full Name</th>
+                            <th class="py-3 px-4">Username</th>
+                            <th class="py-3 px-4">Role</th>
+                            <th class="py-3 px-4">Created Date</th>
+                            <th class="py-3 px-4 text-right">Action</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 text-sm">
-                        {% for donor in donors %}
-                            {% set history_list = donor_histories.get(donor.id, []) %}
-                            <tr class="hover:bg-red-50/50 transition cursor-pointer"
-                                onclick="openDonorModal(this)"
-                                data-id="{{ donor.id }}"
-                                data-name="{{ donor.name }}"
-                                data-blood-group="{{ donor.blood_group }}"
-                                data-department="{{ donor.department }}"
-                                data-session="{{ donor.session }}"
-                                data-phone="{{ donor.phone }}"
-                                data-last-donation="{{ donor.last_donation_date if donor.last_donation_date else '' }}"
-                                data-total-donations="{{ donor.total_donations if donor.total_donations is not none else '' }}"
-                                data-is-badhon="{{ 1 if donor.is_badhon_member else 0 }}"
-                                data-is-available="{{ 1 if donor.is_available else 0 }}"
-                                data-history='[
-                                    {% for h in history_list %}
-                                        {"donation_date": "{{ h.donation_date }}"}{% if not loop.last %},{% endif %}
-                                    {% endfor %}
-                                ]'>
-                                
-                                <!-- Blood Group Badge -->
+                    <tbody class="divide-y divide-gray-100">
+                        {% for sa in subadmins %}
+                            <tr class="hover:bg-purple-50/40 transition">
+                                <td class="py-3.5 px-4 font-bold text-gray-900">{{ sa.full_name }}</td>
+                                <td class="py-3.5 px-4 text-xs font-mono font-bold text-purple-900">{{ sa.username }}</td>
                                 <td class="py-3.5 px-4">
-                                    <span class="inline-flex items-center justify-center px-3 py-1.5 rounded-xl font-black text-sm shadow-sm bg-brand-600 text-white">
-                                        {{ donor.blood_group }}
+                                    <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-purple-100 text-purple-800">
+                                        ⚡ Sub-Admin
                                     </span>
                                 </td>
-
-                                <!-- Donor Info (Name & Phone) -->
-                                <td class="py-3.5 px-4">
-                                    <div class="font-bold text-gray-900 hover:text-brand-600 transition flex items-center space-x-1.5">
-                                        <span>{{ donor.name }}</span>
-                                        <i class="fa-solid fa-up-right-from-square text-[10px] text-gray-400"></i>
-                                    </div>
-                                    <a href="tel:{{ donor.phone }}" onclick="event.stopPropagation();" class="text-xs text-brand-700 font-semibold hover:underline flex items-center space-x-1 mt-0.5">
-                                        <i class="fa-solid fa-phone text-[10px]"></i>
-                                        <span>{{ donor.phone }}</span>
-                                    </a>
+                                <td class="py-3.5 px-4 text-xs text-gray-500">{{ sa.created_at }}</td>
+                                <td class="py-3.5 px-4 text-right">
+                                    <form method="POST" action="{{ url_for('delete_user_route', id=sa.id) }}" class="inline" onsubmit="return confirm('Are you sure you want to remove Sub-Admin {{ sa.username }}?');">
+                                        <button type="submit" class="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs rounded-lg transition border border-red-200">
+                                            Remove Sub-Admin
+                                        </button>
+                                    </form>
                                 </td>
-
-                                <!-- Dept & Session -->
-                                <td class="py-3.5 px-4">
-                                    <div class="font-semibold text-gray-800">{{ donor.department }}</div>
-                                    <div class="text-xs text-gray-500">Session: {{ donor.session }}</div>
-                                </td>
-
-                                <!-- Badhon Member Badge -->
-                                <td class="py-3.5 px-4">
-                                    {% if donor.is_badhon_member %}
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200">
-                                            <i class="fa-solid fa-award mr-1"></i> Badhon Member
-                                        </span>
-                                    {% else %}
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs text-gray-400 font-medium bg-gray-50">
-                                            Non-Member
-                                        </span>
-                                    {% endif %}
-                                </td>
-
-                                <!-- Last Donation Date -->
-                                <td class="py-3.5 px-4 text-gray-700">
-                                    {% if donor.last_donation_date %}
-                                        <span class="font-medium text-xs flex items-center space-x-1">
-                                            <span>{{ donor.last_donation_date }}</span>
-                                            {% if history_list|length > 1 %}
-                                                <i class="fa-solid fa-clock-rotate-left text-[10px] text-brand-600"></i>
-                                            {% endif %}
-                                        </span>
-                                    {% else %}
-                                        <span class="text-xs text-gray-400 italic">N/A</span>
-                                    {% endif %}
-                                </td>
-
-                                <!-- Total Donations Count -->
-                                <td class="py-3.5 px-4 text-center">
-                                    {% if donor.total_donations is not none and donor.total_donations != '' %}
-                                        <span class="inline-block px-2.5 py-1 rounded-lg text-xs font-bold {% if donor.total_donations > 0 %}bg-red-100 text-brand-800{% else %}bg-gray-100 text-gray-500{% endif %}">
-                                            {{ donor.total_donations }} times
-                                        </span>
-                                    {% else %}
-                                        <span class="inline-block px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-400 italic">
-                                            N/A
-                                        </span>
-                                    {% endif %}
-                                </td>
-
-                                <!-- Availability Toggle -->
-                                <td class="py-3.5 px-4" onclick="event.stopPropagation();">
-                                    {% if current_user.role in ['admin', 'subadmin'] %}
-                                        <form method="POST" action="{{ url_for('toggle_status', id=donor.id) }}">
-                                            <button type="submit" title="Click to toggle availability"
-                                                    class="px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center space-x-1.5 border {% if donor.is_available %}bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100{% else %}bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200{% endif %}">
-                                                <span class="w-2 h-2 rounded-full {% if donor.is_available %}bg-emerald-500 animate-pulse{% else %}bg-gray-400{% endif %}"></span>
-                                                <span>{% if donor.is_available %}Available{% else %}Unavailable{% endif %}</span>
-                                            </button>
-                                        </form>
-                                    {% else %}
-                                        <span class="px-2.5 py-1 rounded-full text-xs font-bold border inline-flex items-center space-x-1.5 {% if donor.is_available %}bg-emerald-50 text-emerald-700 border-emerald-300{% else %}bg-gray-100 text-gray-600 border-gray-300{% endif %}">
-                                            <span class="w-2 h-2 rounded-full {% if donor.is_available %}bg-emerald-500{% else %}bg-gray-400{% endif %}"></span>
-                                            <span>{% if donor.is_available %}Available{% else %}Unavailable{% endif %}</span>
-                                        </span>
-                                    {% endif %}
-                                </td>
-
-                                <!-- Actions (Edit / Delete) -->
-                                {% if current_user.role in ['admin', 'subadmin'] %}
-                                    <td class="py-3.5 px-4 text-right" onclick="event.stopPropagation();">
-                                        <div class="flex items-center justify-end space-x-2">
-                                            <a href="{{ url_for('edit_donor', id=donor.id) }}" class="p-1.5 text-gray-500 hover:text-brand-600 hover:bg-red-50 rounded-lg transition" title="Edit Donor Profile & History">
-                                                <i class="fa-solid fa-pen-to-square"></i>
-                                            </a>
-                                            <form method="POST" action="{{ url_for('delete_donor', id=donor.id) }}" onsubmit="return confirm('Are you sure you want to delete donor {{ donor.name }}?');">
-                                                <button type="submit" class="p-1.5 text-gray-400 hover:text-red-700 hover:bg-red-50 rounded-lg transition" title="Delete Donor">
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                {% endif %}
                             </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         {% else %}
-            <div class="p-12 text-center text-gray-500">
-                <i class="fa-solid fa-user-slash text-4xl text-gray-300 mb-3"></i>
-                <p class="text-base font-semibold text-gray-700">No donor records found</p>
-                <p class="text-xs text-gray-500 mt-1">Try resetting your filters.</p>
-            </div>
+            <p class="text-xs text-gray-500 italic text-center py-4 bg-gray-50 rounded-xl border border-dashed border-gray-200">No Sub-Admin accounts created yet.</p>
         {% endif %}
     </div>
-
-{% else %}
-
-    <!-- Restricted Access Card for Guest / Public Users -->
-    <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-8 md:p-12 text-center max-w-2xl mx-auto my-6">
-        <div class="w-16 h-16 bg-red-100 text-brand-700 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fa-solid fa-shield-halved text-3xl"></i>
-        </div>
-        <h3 class="text-2xl font-black text-gray-900 mb-2">Donor Directory Access Protected</h3>
-        <p class="text-sm text-gray-600 mb-6 leading-relaxed">
-            Donor contact details and personal information are strictly restricted to authenticated members and administrators of GSTU Badhon Network.
-        </p>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <a href="{{ url_for('request_blood') }}" class="p-4 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow transition text-sm flex items-center justify-center space-x-2">
-                <i class="fa-solid fa-paper-plane"></i>
-                <span>Request Blood Now</span>
-            </a>
-            <a href="{{ url_for('login') }}" class="p-4 bg-gray-900 hover:bg-black text-white font-bold rounded-xl shadow transition text-sm flex items-center justify-center space-x-2">
-                <i class="fa-solid fa-right-to-bracket"></i>
-                <span>Login to View Donors</span>
-            </a>
-        </div>
-    </div>
-
 {% endif %}
 
-<!-- Interactive Donor Details Pop-up Modal -->
+<!-- Interactive Donor Profile Pop-up Modal -->
 <div id="donorModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity" onclick="if(event.target === this) closeDonorModal();">
     <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-100 transform transition-all scale-95 opacity-0 duration-200" id="donorModalCard">
         
@@ -444,11 +475,11 @@
                 <span id="modalPhone">Call Donor</span>
             </a>
 
-            <!-- Recorded History -->
+            <!-- Recorded Donation History (Last 10) -->
             <div>
                 <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center space-x-1.5">
                     <i class="fa-solid fa-clock-rotate-left text-brand-600"></i>
-                    <span>Recorded Donation Dates (Last 10)</span>
+                    <span>Recorded Donation Dates (Last 10 Times)</span>
                 </h4>
                 <div id="modalHistoryList" class="bg-gray-50 rounded-xl p-3 max-h-36 overflow-y-auto text-xs space-y-1.5 border border-gray-200">
                     <!-- Dynamic history items -->
@@ -457,14 +488,10 @@
 
             <!-- Footer Action Controls -->
             <div class="pt-2 border-t border-gray-100 flex items-center justify-between">
-                {% if current_user.role in ['admin', 'subadmin'] %}
-                    <a id="modalEditBtn" href="#" class="px-4 py-2 bg-brand-50 text-brand-700 hover:bg-brand-100 rounded-xl text-xs font-bold transition flex items-center space-x-1">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                        <span>Edit Donor Profile</span>
-                    </a>
-                {% else %}
-                    <div></div>
-                {% endif %}
+                <a id="modalEditBtn" href="#" class="px-4 py-2 bg-brand-50 text-brand-700 hover:bg-brand-100 rounded-xl text-xs font-bold transition flex items-center space-x-1 border border-brand-200">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>Edit Donor & History</span>
+                </a>
                 <button onclick="closeDonorModal()" class="px-5 py-2 bg-gray-900 hover:bg-black text-white rounded-xl text-xs font-bold transition">
                     Close
                 </button>

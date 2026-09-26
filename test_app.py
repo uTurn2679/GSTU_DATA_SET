@@ -29,44 +29,12 @@ class BloodDonorTestCase(unittest.TestCase):
         if os.path.exists('test_blood_donors.db'):
             os.remove('test_blood_donors.db')
 
-    def test_guest_restricted_access(self):
-        # Guest visiting main page should see restricted hero banner
-        response = self.app.get('/')
+    def test_unauthenticated_user_redirect(self):
+        # Unauthenticated user visiting root should be redirected to /login
+        response = self.app.get('/', follow_redirects=True)
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Donor Directory Access Protected', response.data)
-        # Guest should not see donor phone number
-        self.assertNotIn(b'01700000001', response.data)
-
-    def test_public_blood_request(self):
-        response = self.app.post('/request-blood', data={
-            'patient_name': 'Patient Salim',
-            'blood_group': 'O+',
-            'hospital_location': 'Patuakhali Medical',
-            'contact_phone': '01899999999',
-            'date_needed': '2026-10-01',
-            'units_needed': '2'
-        }, follow_redirects=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Emergency Blood Request submitted', response.data)
-
-        # Verify request exists in DB
-        reqs = database.get_blood_requests()
-        self.assertEqual(len(reqs), 1)
-        self.assertEqual(reqs[0]['patient_name'], 'Patient Salim')
-
-    def test_member_login_and_view_only(self):
-        # Login as member
-        login_resp = self.app.post('/login', data={
-            'username': 'member',
-            'password': 'member123'
-        }, follow_redirects=True)
-        self.assertEqual(login_resp.status_code, 200)
-        self.assertIn(b'Donor Directory', login_resp.data)
-        self.assertIn(b'Test Donor Badhon', login_resp.data)
-
-        # Member should NOT be able to access register or edit
-        reg_resp = self.app.get('/donor/register', follow_redirects=True)
-        self.assertIn(b'Access denied', reg_resp.data)
+        self.assertIn(b'Admin System Portal', response.data)
+        self.assertIn(b'Please log in as Admin or Sub-Admin', response.data)
 
     def test_admin_habib_login_and_subadmin_creation(self):
         # Login as Super Admin HABIB2679
@@ -75,6 +43,8 @@ class BloodDonorTestCase(unittest.TestCase):
             'password': '233134'
         }, follow_redirects=True)
         self.assertEqual(login_resp.status_code, 200)
+        self.assertIn(b'GSTU Donor Management Dashboard', login_resp.data)
+        self.assertIn(b'Super Admin', login_resp.data)
 
         # Create Sub-Admin
         sub_resp = self.app.post('/admin/subadmin/create', data={
@@ -92,7 +62,37 @@ class BloodDonorTestCase(unittest.TestCase):
             'password': 'subpassword123'
         }, follow_redirects=True)
         self.assertEqual(sub_login.status_code, 200)
-        self.assertIn(b'shakil_subadmin', sub_login.data)
+        self.assertIn(b'Sub-Admin', sub_login.data)
+        self.assertIn(b'Test Donor Badhon', sub_login.data)
+
+    def test_donor_10_donation_history_cap(self):
+        # Login as Admin
+        self.app.post('/login', data={'username': 'HABIB2679', 'password': '233134'})
+
+        # Add 12 donation dates to donor
+        for i in range(1, 13):
+            date_str = f"2025-01-{i:02d}"
+            database.add_donation_history(self.donor_id, date_str)
+
+        # Check recorded history count is capped at 10
+        history = database.get_donation_history(self.donor_id)
+        self.assertEqual(len(history), 10)
+
+    def test_subadmin_cannot_create_subadmin(self):
+        # Create Sub-Admin via database helper
+        database.create_user('sub_user', 'pass123', 'subadmin', 'Sub User')
+
+        # Login as Sub-Admin
+        self.app.post('/login', data={'username': 'sub_user', 'password': 'pass123'})
+
+        # Attempt to create another Sub-Admin
+        resp = self.app.post('/admin/subadmin/create', data={
+            'full_name': 'Attempt Sub',
+            'username': 'attempt_sub',
+            'password': 'password'
+        }, follow_redirects=True)
+
+        self.assertIn(b'Access denied', resp.data)
 
 if __name__ == '__main__':
     unittest.main()
