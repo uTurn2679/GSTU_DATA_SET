@@ -1,7 +1,8 @@
 import io
 import csv
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, flash, Response
+from functools import wraps
+from flask import Flask, render_template, request, redirect, url_for, flash, Response, session
 import database
 
 app = Flask(__name__)
@@ -11,8 +12,31 @@ database.init_db()
 
 BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
 
+# Session User Context Processor
+@app.context_processor
+def inject_user():
+    return dict(current_user=session.get('user'))
+
+# Role-based access decorators
+def role_required(allowed_roles):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            user = session.get('user')
+            if not user:
+                flash('Please login to access this page.', 'warning')
+                return redirect(url_for('login'))
+            if user.get('role') not in allowed_roles:
+                flash('Access denied. You do not have permission for this action.', 'error')
+                return redirect(url_for('index'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
 @app.route('/')
 def index():
+    user = session.get('user')
+    
     search_query = request.args.get('search', '').strip()
     blood_group = request.args.get('blood_group', '').strip()
     department = request.args.get('department', '').strip()
@@ -20,22 +44,28 @@ def index():
     badhon_filter = request.args.get('badhon', '').strip()
     availability_filter = request.args.get('availability', '').strip()
 
-    donors = database.get_donors(
-        search=search_query,
-        blood_group=blood_group,
-        department=department,
-        session_val=session_filter,
-        badhon=badhon_filter,
-        availability=availability_filter
-    )
+    donors = []
+    donor_histories = {}
+
+    # Donor directory list is accessible to logged-in Members, Sub-Admins, and Admins
+    if user:
+        donors = database.get_donors(
+            search=search_query,
+            blood_group=blood_group,
+            department=department,
+            session_val=session_filter,
+            badhon=badhon_filter,
+            availability=availability_filter
+        )
+        donor_histories = {d['id']: database.get_donation_history(d['id']) for d in donors}
 
     stats = database.get_stats()
-
     group_stats = {bg: stats['group_counts'].get(bg, 0) for bg in BLOOD_GROUPS}
 
     return render_template(
         'index.html',
         donors=donors,
+        donor_histories=donor_histories,
         total_donors=stats['total_donors'],
         available_donors_count=stats['available_donors_count'],
         badhon_members_count=stats['badhon_members_count'],
@@ -52,7 +82,115 @@ def index():
         selected_availability=availability_filter
     )
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+
+        user = database.verify_user(username, password)
+        if user:
+            session['user'] = {
+                'id': user['id'],
+                'username': user['username'],
+                'role': user['role'],
+                'full_name': user['full_name']
+            }
+            flash(f"Welcome back, {user['full_name']}!", 'success')
+            if user['role'] in ['admin', 'subadmin']:
+                return redirect(url_for('admin_dashboard'))
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid username or password.', 'error')
+            return redirect(url_for('login'))
+
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('user', None)
+    flash('Logged out successfully.', 'info')
+    return redirect(url_for('index'))
+
+@app.route('/request-blood', methods=['GET', 'POST'])
+def request_blood():
+    stats = database.get_stats()
+    group_stats = {bg: stats['group_counts'].get(bg, 0) for bg in BLOOD_GROUPS}
+
+    if request.method == 'POST':
+        patient_name = request.form.get('patient_name', '').strip()
+        blood_group = request.form.get('blood_group', '').strip()
+        hospital_location = request.form.get('hospital_location', '').strip()
+        contact_phone = request.form.get('contact_phone', '').strip()
+        date_needed = request.form.get('date_needed', '').strip()
+        units_needed_str = request.form.get('units_needed', '1').strip()
+
+        if not patient_name or not blood_group or not hospital_location or not contact_phone or not date_needed:
+            flash('Please fill in all required fields.', 'error')
+            return redirect(url_for('request_blood'))
+
+        try:
+            units_needed = int(units_needed_str)
+        except ValueError:
+            units_needed = 1
+
+        database.add_blood_request(
+            patient_name=patient_name,
+            blood_group=blood_group,
+            hospital_location=hospital_location,
+            contact_phone=contact_phone,
+            date_needed=date_needed,
+            units_needed=units_needed
+        )
+
+        flash(f'Emergency Blood Request submitted for {patient_name}! Badhon admins will contact you shortly.', 'success')
+        return redirect(url_for('request_blood'))
+
+    return render_template('request_blood.html', blood_groups=BLOOD_GROUPS, group_stats=group_stats)
+
+@app.route('/admin/dashboard')
+@role_required(['admin', 'subadmin'])
+def admin_dashboard():
+    requests = database.get_blood_requests()
+    subadmins = database.get_subadmins()
+    return render_template('admin_dashboard.html', requests=requests, subadmins=subadmins)
+
+@app.route('/admin/subadmin/create', methods=['POST'])
+@role_required(['admin'])  # Only Super Admin HABIB2679 can create Sub-Admins
+def create_subadmin():
+    full_name = request.form.get('full_name', '').strip()
+    username = request.form.get('username', '').strip()
+    password = request.form.get('password', '').strip()
+
+    if not full_name or not username or not password:
+        flash('Please fill in all Sub-Admin fields.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    res = database.create_user(username=username, password=password, role='subadmin', full_name=full_name)
+    if res:
+        flash(f'Sub-Admin account "{username}" created successfully!', 'success')
+    else:
+        flash(f'Username "{username}" is already taken.', 'error')
+
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/user/<int:id>/delete', methods=['POST'])
+@role_required(['admin'])  # Only Super Admin HABIB2679 can delete users
+def delete_user_route(id):
+    database.delete_user(id)
+    flash('Sub-Admin account removed.', 'warning')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/requests/<int:id>/status', methods=['POST'])
+@role_required(['admin', 'subadmin'])
+def update_request_status_route(id):
+    new_status = request.form.get('status', 'Pending').strip()
+    database.update_request_status(id, new_status)
+    flash(f'Blood request status updated to {new_status}.', 'info')
+    return redirect(url_for('admin_dashboard'))
+
 @app.route('/donor/register', methods=['GET', 'POST'])
+@role_required(['admin', 'subadmin'])
 def register():
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
@@ -92,6 +230,7 @@ def register():
     return render_template('register.html', blood_groups=BLOOD_GROUPS)
 
 @app.route('/donor/<int:id>/edit', methods=['GET', 'POST'])
+@role_required(['admin', 'subadmin'])
 def edit_donor(id):
     donor = database.get_donor(id)
     if not donor:
@@ -128,11 +267,42 @@ def edit_donor(id):
         )
 
         flash(f'Donor "{name}" updated successfully!', 'success')
+        return redirect(url_for('edit_donor', id=id))
+
+    history = database.get_donation_history(id)
+    return render_template('edit.html', donor=donor, history=history, blood_groups=BLOOD_GROUPS)
+
+@app.route('/donor/<int:id>/history/add', methods=['POST'])
+@role_required(['admin', 'subadmin'])
+def add_history(id):
+    donor = database.get_donor(id)
+    if not donor:
+        flash('Donor not found.', 'error')
         return redirect(url_for('index'))
 
-    return render_template('edit.html', donor=donor, blood_groups=BLOOD_GROUPS)
+    donation_date = request.form.get('donation_date', '').strip()
+    if not donation_date:
+        flash('Please select a valid donation date.', 'error')
+        return redirect(url_for('edit_donor', id=id))
+
+    database.add_donation_history(id, donation_date)
+    flash(f'Donation date ({donation_date}) added to donor history!', 'success')
+    return redirect(url_for('edit_donor', id=id))
+
+@app.route('/donor/<int:id>/history/<int:history_id>/delete', methods=['POST'])
+@role_required(['admin', 'subadmin'])
+def delete_history(id, history_id):
+    donor = database.get_donor(id)
+    if not donor:
+        flash('Donor not found.', 'error')
+        return redirect(url_for('index'))
+
+    database.delete_donation_history(history_id, id)
+    flash('Donation date removed from history.', 'info')
+    return redirect(url_for('edit_donor', id=id))
 
 @app.route('/donor/<int:id>/toggle-status', methods=['POST'])
+@role_required(['admin', 'subadmin'])
 def toggle_status(id):
     res = database.toggle_availability(id)
     if res:
@@ -141,12 +311,14 @@ def toggle_status(id):
     return redirect(url_for('index'))
 
 @app.route('/donor/<int:id>/delete', methods=['POST'])
+@role_required(['admin', 'subadmin'])
 def delete_donor(id):
     name = database.delete_donor(id)
     flash(f'Donor "{name}" was removed from the database.', 'warning')
     return redirect(url_for('index'))
 
 @app.route('/export/csv')
+@role_required(['admin', 'subadmin'])
 def export_csv():
     donors = database.get_donors()
 

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Login - GSTU Blood Donor Database{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto my-10">
+    <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+        <div class="text-center mb-8">
+            <div class="w-14 h-14 bg-red-100 text-brand-700 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
+                <i class="fa-solid fa-user-lock text-2xl"></i>
+            </div>
+            <h2 class="text-2xl font-black text-gray-900">Portal Login</h2>
+            <p class="text-xs text-gray-500 mt-1">Log in as Member, Sub-Admin, or Super Admin</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('login') }}" class="space-y-5">
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Username</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-user"></i>
+                    </span>
+                    <input type="text" name="username" required placeholder="e.g. HABIB2679 or member"
+                           class="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Password</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-key"></i>
+                    </span>
+                    <input type="password" name="password" required placeholder="••••••••"
+                           class="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+            </div>
+
+            <button type="submit" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl transition shadow-md flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                <span>Sign In</span>
+            </button>
+        </form>
+
+        <!-- Quick Login Cards for Testing -->
+        <div class="mt-8 pt-6 border-t border-gray-100 space-y-2">
+            <p class="text-[11px] font-semibold uppercase text-gray-400 text-center tracking-wider mb-3">Quick Login Options</p>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+                <button type="button" onclick="fillCreds('HABIB2679', '233134')"
+                        class="p-2.5 bg-red-50 hover:bg-red-100 text-brand-800 rounded-xl border border-red-200 text-left transition font-semibold">
+                    <div class="font-bold flex items-center space-x-1">
+                        <i class="fa-solid fa-crown text-amber-500 text-[10px]"></i>
+                        <span>Super Admin</span>
+                    </div>
+                    <div class="text-[10px] text-brand-600 mt-0.5">HABIB2679</div>
+                </button>
+                <button type="button" onclick="fillCreds('member', 'member123')"
+                        class="p-2.5 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-xl border border-blue-200 text-left transition font-semibold">
+                    <div class="font-bold flex items-center space-x-1">
+                        <i class="fa-solid fa-users text-blue-500 text-[10px]"></i>
+                        <span>Member</span>
+                    </div>
+                    <div class="text-[10px] text-blue-600 mt-0.5">member</div>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function fillCreds(u, p) {
+        document.querySelector('input[name="username"]').value = u;
+        document.querySelector('input[name="password"]').value = p;
+    }
+</script>
+{% endblock %}

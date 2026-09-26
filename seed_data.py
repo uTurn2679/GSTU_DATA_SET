@@ -10,7 +10,8 @@ sample_donors = [
         "last_donation_date": "2026-05-12",
         "total_donations": 4,
         "is_badhon_member": True,
-        "is_available": True
+        "is_available": True,
+        "history_dates": ["2026-05-12", "2025-12-10", "2025-07-04", "2024-11-20"]
     },
     {
         "name": "Nusrat Jahan Tanvin",
@@ -21,7 +22,8 @@ sample_donors = [
         "last_donation_date": "2026-02-18",
         "total_donations": 2,
         "is_badhon_member": True,
-        "is_available": True
+        "is_available": True,
+        "history_dates": ["2026-02-18", "2025-08-15"]
     },
     {
         "name": "Arifur Rahman",
@@ -32,7 +34,8 @@ sample_donors = [
         "last_donation_date": "2025-11-30",
         "total_donations": 6,
         "is_badhon_member": True,
-        "is_available": True
+        "is_available": True,
+        "history_dates": ["2025-11-30", "2025-06-12", "2024-12-01", "2024-05-15", "2023-10-10", "2023-03-25"]
     },
     {
         "name": "Sumaiya Akter",
@@ -43,7 +46,8 @@ sample_donors = [
         "last_donation_date": "2026-08-10",
         "total_donations": 1,
         "is_badhon_member": False,
-        "is_available": False
+        "is_available": False,
+        "history_dates": ["2026-08-10"]
     },
     {
         "name": "Mahmudul Islam",
@@ -54,7 +58,8 @@ sample_donors = [
         "last_donation_date": "2026-01-15",
         "total_donations": 5,
         "is_badhon_member": True,
-        "is_available": True
+        "is_available": True,
+        "history_dates": ["2026-01-15", "2025-08-01", "2025-02-14", "2024-09-10", "2024-03-01"]
     },
     {
         "name": "Tanzila Rahman",
@@ -65,7 +70,8 @@ sample_donors = [
         "last_donation_date": None,
         "total_donations": 0,
         "is_badhon_member": False,
-        "is_available": True
+        "is_available": True,
+        "history_dates": []
     },
     {
         "name": "Shakil Ahmed",
@@ -76,7 +82,8 @@ sample_donors = [
         "last_donation_date": "2026-04-05",
         "total_donations": 3,
         "is_badhon_member": True,
-        "is_available": True
+        "is_available": True,
+        "history_dates": ["2026-04-05", "2025-10-12", "2025-04-01"]
     },
     {
         "name": "Faria Hossain",
@@ -87,7 +94,8 @@ sample_donors = [
         "last_donation_date": "2026-07-20",
         "total_donations": 1,
         "is_badhon_member": False,
-        "is_available": False
+        "is_available": False,
+        "history_dates": ["2026-07-20"]
     }
 ]
 
@@ -96,8 +104,12 @@ def seed():
     existing = database.get_donors()
     if len(existing) == 0:
         for data in sample_donors:
-            database.add_donor(**data)
-        print(f"Successfully seeded database with {len(sample_donors)} donors!")
+            history_dates = data.pop("history_dates", [])
+            donor_id = database.add_donor(**data)
+            for d in history_dates:
+                # Add each date to donation_history
+                database.add_donation_history(donor_id, d)
+        print(f"Successfully seeded database with {len(sample_donors)} donors and their donation histories!")
     else:
         print(f"Database already contains {len(existing)} donors.")
 

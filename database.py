@@ -12,6 +12,8 @@ def get_db():
 def init_db():
     conn = get_db()
     cursor = conn.cursor()
+    
+    # Donors Table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS donors (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,9 +29,143 @@ def init_db():
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         );
     ''')
+
+    # Donation History Table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS donation_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            donor_id INTEGER NOT NULL,
+            donation_date TEXT NOT NULL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(donor_id) REFERENCES donors(id) ON DELETE CASCADE
+        );
+    ''')
+
+    # Users Table (Admin, Sub-Admin, Member)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            role TEXT NOT NULL,
+            full_name TEXT NOT NULL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+    ''')
+
+    # Blood Requests Table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS blood_requests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            patient_name TEXT NOT NULL,
+            blood_group TEXT NOT NULL,
+            hospital_location TEXT NOT NULL,
+            contact_phone TEXT NOT NULL,
+            date_needed TEXT NOT NULL,
+            units_needed INTEGER DEFAULT 1,
+            status TEXT DEFAULT 'Pending',
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+    ''')
+
+    conn.commit()
+
+    # Seed Default Super Admin and Member accounts if not present
+    cursor.execute("SELECT COUNT(*) as count FROM users WHERE username = ?", ('HABIB2679',))
+    if cursor.fetchone()['count'] == 0:
+        cursor.execute('''
+            INSERT INTO users (username, password, role, full_name)
+            VALUES (?, ?, ?, ?)
+        ''', ('HABIB2679', '233134', 'admin', 'Super Admin Habib'))
+
+    cursor.execute("SELECT COUNT(*) as count FROM users WHERE username = ?", ('member',))
+    if cursor.fetchone()['count'] == 0:
+        cursor.execute('''
+            INSERT INTO users (username, password, role, full_name)
+            VALUES (?, ?, ?, ?)
+        ''', ('member', 'member123', 'member', 'General Member'))
+
     conn.commit()
     conn.close()
 
+# User Authentication & Management Functions
+def get_user_by_username(username):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+    user = cursor.fetchone()
+    conn.close()
+    return user
+
+def verify_user(username, password):
+    user = get_user_by_username(username)
+    if user and user['password'] == password:
+        return user
+    return None
+
+def create_user(username, password, role, full_name):
+    conn = get_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            INSERT INTO users (username, password, role, full_name)
+            VALUES (?, ?, ?, ?)
+        ''', (username, password, role, full_name))
+        conn.commit()
+        user_id = cursor.lastrowid
+        conn.close()
+        return user_id
+    except sqlite3.IntegrityError:
+        conn.close()
+        return None
+
+def get_subadmins():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE role = 'subadmin' ORDER BY id DESC")
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
+
+def delete_user(user_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+
+# Blood Requests Functions
+def add_blood_request(patient_name, blood_group, hospital_location, contact_phone, date_needed, units_needed=1):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO blood_requests (patient_name, blood_group, hospital_location, contact_phone, date_needed, units_needed, status)
+        VALUES (?, ?, ?, ?, ?, ?, 'Pending')
+    ''', (patient_name, blood_group, hospital_location, contact_phone, date_needed, units_needed))
+    conn.commit()
+    req_id = cursor.lastrowid
+    conn.close()
+    return req_id
+
+def get_blood_requests(status=None):
+    conn = get_db()
+    cursor = conn.cursor()
+    if status:
+        cursor.execute("SELECT * FROM blood_requests WHERE status = ? ORDER BY id DESC", (status,))
+    else:
+        cursor.execute("SELECT * FROM blood_requests ORDER BY id DESC")
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
+
+def update_request_status(request_id, new_status):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE blood_requests SET status = ? WHERE id = ?", (new_status, request_id))
+    conn.commit()
+    conn.close()
+
+# Donor Management Functions
 def get_donors(search=None, blood_group=None, department=None, session_val=None, badhon=None, availability=None):
     conn = get_db()
     cursor = conn.cursor()
@@ -93,6 +229,14 @@ def add_donor(name, department, session_val, blood_group, phone, last_donation_d
     ))
     conn.commit()
     donor_id = cursor.lastrowid
+
+    if last_donation_date:
+        cursor.execute('''
+            INSERT INTO donation_history (donor_id, donation_date)
+            VALUES (?, ?)
+        ''', (donor_id, last_donation_date))
+        conn.commit()
+
     conn.close()
     return donor_id
 
@@ -114,6 +258,71 @@ def update_donor(donor_id, name, department, session_val, blood_group, phone, la
     conn.commit()
     conn.close()
 
+def get_donation_history(donor_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT * FROM donation_history
+        WHERE donor_id = ?
+        ORDER BY donation_date DESC, id DESC
+        LIMIT 10
+    ''', (donor_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
+
+def add_donation_history(donor_id, donation_date):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO donation_history (donor_id, donation_date)
+        VALUES (?, ?)
+    ''', (donor_id, donation_date))
+    conn.commit()
+
+    # Enforce max 10 dates per donor (delete older entries)
+    cursor.execute('''
+        DELETE FROM donation_history
+        WHERE id NOT IN (
+            SELECT id FROM donation_history
+            WHERE donor_id = ?
+            ORDER BY donation_date DESC, id DESC
+            LIMIT 10
+        ) AND donor_id = ?
+    ''', (donor_id, donor_id))
+    conn.commit()
+
+    _sync_donor_donation_stats(cursor, donor_id)
+    conn.commit()
+    conn.close()
+
+def delete_donation_history(history_id, donor_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM donation_history WHERE id = ? AND donor_id = ?", (history_id, donor_id))
+    conn.commit()
+
+    _sync_donor_donation_stats(cursor, donor_id)
+    conn.commit()
+    conn.close()
+
+def _sync_donor_donation_stats(cursor, donor_id):
+    cursor.execute('''
+        SELECT MAX(donation_date) as max_date, COUNT(*) as history_count
+        FROM donation_history
+        WHERE donor_id = ?
+    ''', (donor_id,))
+    res = cursor.fetchone()
+    if res and res['history_count'] > 0:
+        max_date = res['max_date']
+        count = res['history_count']
+        cursor.execute('''
+            UPDATE donors
+            SET last_donation_date = ?,
+                total_donations = CASE WHEN total_donations < ? THEN ? ELSE total_donations END
+            WHERE id = ?
+        ''', (max_date, count, count, donor_id))
+
 def toggle_availability(donor_id):
     conn = get_db()
     cursor = conn.cursor()
@@ -130,6 +339,7 @@ def delete_donor(donor_id):
     cursor.execute("SELECT name FROM donors WHERE id = ?", (donor_id,))
     row = cursor.fetchone()
     name = row['name'] if row else "Donor"
+    cursor.execute("DELETE FROM donation_history WHERE donor_id = ?", (donor_id,))
     cursor.execute("DELETE FROM donors WHERE id = ?", (donor_id,))
     conn.commit()
     conn.close()
@@ -161,6 +371,9 @@ def get_stats():
     cursor.execute("SELECT blood_group, COUNT(*) as count FROM donors GROUP BY blood_group")
     group_counts = {r['blood_group']: r['count'] for r in cursor.fetchall()}
 
+    cursor.execute("SELECT COUNT(*) as pending FROM blood_requests WHERE status = 'Pending'")
+    pending_requests_count = cursor.fetchone()['pending']
+
     conn.close()
 
     return {
@@ -170,5 +383,6 @@ def get_stats():
         'total_donations_sum': total_donations_sum,
         'departments': departments,
         'sessions': sessions,
-        'group_counts': group_counts
+        'group_counts': group_counts,
+        'pending_requests_count': pending_requests_count
     }

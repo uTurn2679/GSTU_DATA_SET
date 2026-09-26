@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - GSTU Blood Donor Database{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-7xl mx-auto">
+    
+    <!-- Top Bar Header -->
+    <div class="bg-gradient-to-r from-gray-900 via-gray-800 to-brand-900 text-white p-6 rounded-2xl shadow-md flex flex-wrap items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-brand-600 text-white">
+                    {% if current_user.role == 'admin' %}Super Admin{% else %}Sub-Admin{% endif %}
+                </span>
+                <span class="text-xs text-gray-300">Logged in as <strong class="text-white">{{ current_user.username }}</strong></span>
+            </div>
+            <h2 class="text-2xl font-black mt-1">Admin Management Portal</h2>
+            <p class="text-xs text-gray-400">Manage blood requests, donor updates, and sub-admin credentials.</p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <a href="{{ url_for('index') }}" class="px-4 py-2 bg-white text-gray-900 hover:bg-gray-100 rounded-xl font-bold text-xs shadow transition flex items-center space-x-2">
+                <i class="fa-solid fa-users text-brand-600"></i>
+                <span>View Donor Directory</span>
+            </a>
+            <a href="{{ url_for('register') }}" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold text-xs shadow transition flex items-center space-x-2">
+                <i class="fa-solid fa-user-plus"></i>
+                <span>Register New Donor</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Create Sub-Admin Section (Exclusive to Super Admin HABIB2679) -->
+    {% if current_user.role == 'admin' %}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+                <div>
+                    <h3 class="text-xl font-black text-gray-900 flex items-center space-x-2">
+                        <i class="fa-solid fa-user-shield text-purple-600"></i>
+                        <span>Create & Manage Sub-Admins</span>
+                    </h3>
+                    <p class="text-xs text-gray-500 mt-1">As Super Admin ({{ current_user.username }}), you can create Sub-Admins to manage donors and blood requests.</p>
+                </div>
+                <span class="px-3 py-1 bg-purple-50 text-purple-700 font-bold text-xs rounded-full border border-purple-200">
+                    {{ subadmins|length }} Sub-Admins Active
+                </span>
+            </div>
+
+            <!-- Sub-Admin Form -->
+            <form method="POST" action="{{ url_for('create_subadmin') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-purple-50/50 p-4 rounded-xl border border-purple-100">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Sub-Admin Full Name</label>
+                    <input type="text" name="full_name" required placeholder="e.g. Tanvir Ahmed"
+                           class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Username</label>
+                    <input type="text" name="username" required placeholder="e.g. tanvir_admin"
+                           class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Password</label>
+                    <div class="flex space-x-2">
+                        <input type="password" name="password" required placeholder="••••••••"
+                               class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white">
+                        <button type="submit" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-lg transition shadow flex-shrink-0 flex items-center space-x-1">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Create</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- List of Sub-Admins -->
+            {% if subadmins %}
+                <div class="overflow-x-auto rounded-xl border border-gray-200">
+                    <table class="w-full text-left text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-600 text-xs font-bold uppercase tracking-wider border-b border-gray-200">
+                                <th class="py-3 px-4">Full Name</th>
+                                <th class="py-3 px-4">Username</th>
+                                <th class="py-3 px-4">Role</th>
+                                <th class="py-3 px-4">Created Date</th>
+                                <th class="py-3 px-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            {% for sa in subadmins %}
+                                <tr class="hover:bg-gray-50/80 transition">
+                                    <td class="py-3 px-4 font-bold text-gray-900">{{ sa.full_name }}</td>
+                                    <td class="py-3 px-4 text-xs font-mono text-gray-700">{{ sa.username }}</td>
+                                    <td class="py-3 px-4">
+                                        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800">
+                                            Sub-Admin
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-xs text-gray-500">{{ sa.created_at }}</td>
+                                    <td class="py-3 px-4 text-right">
+                                        <form method="POST" action="{{ url_for('delete_user_route', id=sa.id) }}" class="inline" onsubmit="return confirm('Remove sub-admin {{ sa.username }}?');">
+                                            <button type="submit" class="text-xs text-red-600 hover:text-red-800 font-semibold hover:underline">
+                                                Remove Sub-Admin
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-xs text-gray-500 italic text-center py-4">No Sub-Admin accounts created yet.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <!-- Public Blood Requests Management Section -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
+        <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+            <div>
+                <h3 class="text-xl font-black text-gray-900 flex items-center space-x-2">
+                    <i class="fa-solid fa-hand-holding-medical text-brand-600"></i>
+                    <span>Public Emergency Blood Requests</span>
+                </h3>
+                <p class="text-xs text-gray-500 mt-1">Review requests submitted by public visitors and assign donors.</p>
+            </div>
+            <span class="px-3 py-1 bg-red-50 text-brand-700 font-bold text-xs rounded-full border border-red-200">
+                {{ requests|length }} Total Requests
+            </span>
+        </div>
+
+        {% if requests %}
+            <div class="overflow-x-auto rounded-xl border border-gray-200">
+                <table class="w-full text-left text-sm border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-600 text-xs font-bold uppercase tracking-wider border-b border-gray-200">
+                            <th class="py-3 px-4">Group</th>
+                            <th class="py-3 px-4">Patient Name</th>
+                            <th class="py-3 px-4">Hospital Location</th>
+                            <th class="py-3 px-4">Contact Phone</th>
+                            <th class="py-3 px-4">Date Needed</th>
+                            <th class="py-3 px-4 text-center">Bags</th>
+                            <th class="py-3 px-4">Status</th>
+                            <th class="py-3 px-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {% for req in requests %}
+                            <tr class="hover:bg-red-50/30 transition">
+                                <td class="py-3 px-4">
+                                    <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-lg font-black text-xs bg-brand-600 text-white">
+                                        {{ req.blood_group }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 font-bold text-gray-900">{{ req.patient_name }}</td>
+                                <td class="py-3 px-4 text-xs text-gray-700">{{ req.hospital_location }}</td>
+                                <td class="py-3 px-4 text-xs font-semibold">
+                                    <a href="tel:{{ req.contact_phone }}" class="text-brand-700 hover:underline flex items-center space-x-1">
+                                        <i class="fa-solid fa-phone text-[10px]"></i>
+                                        <span>{{ req.contact_phone }}</span>
+                                    </a>
+                                </td>
+                                <td class="py-3 px-4 text-xs font-medium text-gray-800">{{ req.date_needed }}</td>
+                                <td class="py-3 px-4 text-center font-bold text-xs text-gray-800">{{ req.units_needed }}</td>
+                                <td class="py-3 px-4">
+                                    {% if req.status == 'Fulfilled' %}
+                                        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">Fulfilled</span>
+                                    {% elif req.status == 'Cancelled' %}
+                                        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600">Cancelled</span>
+                                    {% else %}
+                                        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 animate-pulse">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 px-4 text-right">
+                                    <div class="flex items-center justify-end space-x-1">
+                                        {% if req.status != 'Fulfilled' %}
+                                            <form method="POST" action="{{ url_for('update_request_status_route', id=req.id) }}" class="inline">
+                                                <input type="hidden" name="status" value="Fulfilled">
+                                                <button type="submit" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold shadow transition">
+                                                    Mark Fulfilled
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                        {% if req.status != 'Cancelled' %}
+                                            <form method="POST" action="{{ url_for('update_request_status_route', id=req.id) }}" class="inline">
+                                                <input type="hidden" name="status" value="Cancelled">
+                                                <button type="submit" class="px-2 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded text-[11px] font-bold transition">
+                                                    Cancel
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-8 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                <i class="fa-solid fa-inbox text-3xl mb-2 text-gray-300"></i>
+                <p class="text-xs font-medium text-gray-500">No public blood requests submitted yet.</p>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
