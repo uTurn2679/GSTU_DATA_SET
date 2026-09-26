@@ -7,21 +7,21 @@ new_survey_donors = [
     # ACCF (1)
     {"name": "নুসরাত জাহান উমি", "phone": "01829769453", "department": "ACCF", "session_val": "2025-26", "blood_group": "B+", "is_badhon_member": False},
 
-    # Econ (14)
-    {"name": "হৃদয় সরকার", "phone": "01871828716", "department": "Econ", "session_val": "2025-26", "blood_group": "B+", "is_badhon_member": False},
-    {"name": "মো: শাহরিয়ার", "phone": "01836473606", "department": "Econ", "session_val": "2025-26", "blood_group": "B+", "is_badhon_member": True},
-    {"name": "মো: ইমন হাসান", "phone": "01301361767", "department": "Econ", "session_val": "2025-26", "blood_group": "O+", "is_badhon_member": True},
-    {"name": "রিয়াজ রহমান সজল", "phone": "01822786014", "department": "Econ", "session_val": "2025-26", "blood_group": "B+", "is_badhon_member": True},
-    {"name": "হেজবুল্লাহ আল মামুন", "phone": "01788097475", "department": "Econ", "session_val": "2025-26", "blood_group": "B+", "is_badhon_member": True},
-    {"name": "নিলয় হোসেন", "phone": "01612935618", "department": "Econ", "session_val": "2025-26", "blood_group": "AB+", "is_badhon_member": True},
-    {"name": "প্রদীপ স্বর্ণকার", "phone": "01930980852", "department": "Econ", "session_val": "2025-26", "blood_group": "AB+", "is_badhon_member": False},
-    {"name": "মো: আবিদ হোসেন", "phone": "01949636448", "department": "Econ", "session_val": "2025-26", "blood_group": "B+", "is_badhon_member": True},
-    {"name": "তামসুবা খানম", "phone": "01707168250", "department": "Econ", "session_val": "2025-26", "blood_group": "B+", "is_badhon_member": True},
-    {"name": "তমা রায়", "phone": "01330315019", "department": "Econ", "session_val": "2025-26", "blood_group": "B+", "is_badhon_member": True},
-    {"name": "জান্নাত", "phone": "01786284703", "department": "Econ", "session_val": "2025-26", "blood_group": "O+", "is_badhon_member": True},
-    {"name": "নীপা", "phone": "01560031076", "department": "Econ", "session_val": "2025-26", "blood_group": "O+", "is_badhon_member": True},
-    {"name": "অপর্ণা", "phone": "01782913388", "department": "Econ", "session_val": "2025-26", "blood_group": "O+", "is_badhon_member": False},
-    {"name": "মাহেক মাহমুদ অনিক", "phone": "01613140222", "department": "Econ", "session_val": "2025-26", "blood_group": "O+", "is_badhon_member": False}
+    # ECO (14)
+    {"name": "হৃদয় সরকার", "phone": "01871828716", "department": "ECO", "session_val": "2025-26", "blood_group": "B+", "is_badhon_member": False},
+    {"name": "মো: শাহরিয়ার", "phone": "01836473606", "department": "ECO", "session_val": "2025-26", "blood_group": "B+", "is_badhon_member": True},
+    {"name": "মো: ইমন হাসান", "phone": "01301361767", "department": "ECO", "session_val": "2025-26", "blood_group": "O+", "is_badhon_member": True},
+    {"name": "রিয়াজ রহমান সজল", "phone": "01822786014", "department": "ECO", "session_val": "2025-26", "blood_group": "B+", "is_badhon_member": True},
+    {"name": "হেজবুল্লাহ আল মামুন", "phone": "01788097475", "department": "ECO", "session_val": "2025-26", "blood_group": "B+", "is_badhon_member": True},
+    {"name": "নিলয় হোসেন", "phone": "01612935618", "department": "ECO", "session_val": "2025-26", "blood_group": "AB+", "is_badhon_member": True},
+    {"name": "প্রদীপ স্বর্ণকার", "phone": "01930980852", "department": "ECO", "session_val": "2025-26", "blood_group": "AB+", "is_badhon_member": False},
+    {"name": "মো: আবিদ হোসেন", "phone": "01949636448", "department": "ECO", "session_val": "2025-26", "blood_group": "B+", "is_badhon_member": True},
+    {"name": "তামসুবা খানম", "phone": "01707168250", "department": "ECO", "session_val": "2025-26", "blood_group": "B+", "is_badhon_member": True},
+    {"name": "তমা রায়", "phone": "01330315019", "department": "ECO", "session_val": "2025-26", "blood_group": "B+", "is_badhon_member": True},
+    {"name": "জান্নাত", "phone": "01786284703", "department": "ECO", "session_val": "2025-26", "blood_group": "O+", "is_badhon_member": True},
+    {"name": "নীপা", "phone": "01560031076", "department": "ECO", "session_val": "2025-26", "blood_group": "O+", "is_badhon_member": True},
+    {"name": "অপর্ণা", "phone": "01782913388", "department": "ECO", "session_val": "2025-26", "blood_group": "O+", "is_badhon_member": False},
+    {"name": "মাহেক মাহমুদ অনিক", "phone": "01613140222", "department": "ECO", "session_val": "2025-26", "blood_group": "O+", "is_badhon_member": False}
 ]
 
 def run_import():
