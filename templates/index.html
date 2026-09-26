@@ -78,7 +78,6 @@
 
 <!-- Blood Group & Availability Quick Filter Bar -->
 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-8 space-y-4">
-    <!-- Blood Group Pills -->
     <div>
         <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Available Donors by Blood Group</p>
         <div class="flex flex-wrap gap-2">
@@ -116,7 +115,6 @@
         <form method="GET" action="{{ url_for('index') }}" class="space-y-4" id="filterForm">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
                 
-                <!-- Search Text -->
                 <div class="lg:col-span-2">
                     <label class="block text-xs font-medium text-gray-600 mb-1">Search Donor</label>
                     <div class="relative">
@@ -128,7 +126,6 @@
                     </div>
                 </div>
 
-                <!-- Blood Group -->
                 <div>
                     <label class="block text-xs font-medium text-gray-600 mb-1">Blood Group</label>
                     <select name="blood_group" onchange="this.form.submit()" class="w-full py-2 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500">
@@ -139,7 +136,6 @@
                     </select>
                 </div>
 
-                <!-- Department -->
                 <div>
                     <label class="block text-xs font-medium text-gray-600 mb-1">Department</label>
                     <select name="department" onchange="this.form.submit()" class="w-full py-2 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500">
@@ -150,7 +146,6 @@
                     </select>
                 </div>
 
-                <!-- Session -->
                 <div>
                     <label class="block text-xs font-medium text-gray-600 mb-1">Session</label>
                     <select name="session" onchange="this.form.submit()" class="w-full py-2 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500">
@@ -161,7 +156,6 @@
                     </select>
                 </div>
 
-                <!-- Badhon Filter -->
                 <div>
                     <label class="block text-xs font-medium text-gray-600 mb-1">Badhon Member</label>
                     <select name="badhon" onchange="this.form.submit()" class="w-full py-2 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500">
@@ -204,10 +198,13 @@
     <!-- Donor Directory Data Table -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <h2 class="text-base font-bold text-gray-800 flex items-center space-x-2">
-                <span>Donor Directory</span>
-                <span class="px-2.5 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700 font-semibold">{{ donors|length }} Donors Listed</span>
-            </h2>
+            <div>
+                <h2 class="text-base font-bold text-gray-800 flex items-center space-x-2">
+                    <span>Donor Directory</span>
+                    <span class="px-2.5 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700 font-semibold">{{ donors|length }} Donors Listed</span>
+                </h2>
+                <p class="text-xs text-gray-400 mt-0.5"><i class="fa-solid fa-circle-info mr-1"></i> Click on any donor to view their full profile & donation history</p>
+            </div>
             {% if current_user.role in ['admin', 'subadmin'] %}
                 <a href="{{ url_for('register') }}" class="text-xs font-semibold text-brand-600 hover:text-brand-800 flex items-center space-x-1">
                     <i class="fa-solid fa-plus"></i>
@@ -235,7 +232,25 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100 text-sm">
                         {% for donor in donors %}
-                            <tr class="hover:bg-red-50/40 transition">
+                            {% set history_list = donor_histories.get(donor.id, []) %}
+                            <tr class="hover:bg-red-50/50 transition cursor-pointer"
+                                onclick="openDonorModal(this)"
+                                data-id="{{ donor.id }}"
+                                data-name="{{ donor.name }}"
+                                data-blood-group="{{ donor.blood_group }}"
+                                data-department="{{ donor.department }}"
+                                data-session="{{ donor.session }}"
+                                data-phone="{{ donor.phone }}"
+                                data-last-donation="{{ donor.last_donation_date if donor.last_donation_date else '' }}"
+                                data-total-donations="{{ donor.total_donations if donor.total_donations is not none else '' }}"
+                                data-is-badhon="{{ 1 if donor.is_badhon_member else 0 }}"
+                                data-is-available="{{ 1 if donor.is_available else 0 }}"
+                                data-history='[
+                                    {% for h in history_list %}
+                                        {"donation_date": "{{ h.donation_date }}"}{% if not loop.last %},{% endif %}
+                                    {% endfor %}
+                                ]'>
+                                
                                 <!-- Blood Group Badge -->
                                 <td class="py-3.5 px-4">
                                     <span class="inline-flex items-center justify-center px-3 py-1.5 rounded-xl font-black text-sm shadow-sm bg-brand-600 text-white">
@@ -245,8 +260,11 @@
 
                                 <!-- Donor Info (Name & Phone) -->
                                 <td class="py-3.5 px-4">
-                                    <div class="font-bold text-gray-900">{{ donor.name }}</div>
-                                    <a href="tel:{{ donor.phone }}" class="text-xs text-brand-700 font-semibold hover:underline flex items-center space-x-1 mt-0.5">
+                                    <div class="font-bold text-gray-900 hover:text-brand-600 transition flex items-center space-x-1.5">
+                                        <span>{{ donor.name }}</span>
+                                        <i class="fa-solid fa-up-right-from-square text-[10px] text-gray-400"></i>
+                                    </div>
+                                    <a href="tel:{{ donor.phone }}" onclick="event.stopPropagation();" class="text-xs text-brand-700 font-semibold hover:underline flex items-center space-x-1 mt-0.5">
                                         <i class="fa-solid fa-phone text-[10px]"></i>
                                         <span>{{ donor.phone }}</span>
                                     </a>
@@ -271,36 +289,15 @@
                                     {% endif %}
                                 </td>
 
-                                <!-- Last Donation Date & History Tooltip -->
+                                <!-- Last Donation Date -->
                                 <td class="py-3.5 px-4 text-gray-700">
                                     {% if donor.last_donation_date %}
-                                        {% set history_list = donor_histories.get(donor.id, []) %}
-                                        <div class="group relative inline-block">
-                                            <span class="font-medium text-xs flex items-center space-x-1 cursor-pointer">
-                                                <span>{{ donor.last_donation_date }}</span>
-                                                {% if history_list|length > 1 %}
-                                                    <i class="fa-solid fa-clock-rotate-left text-[10px] text-brand-600"></i>
-                                                {% endif %}
-                                            </span>
-                                            {% if history_list %}
-                                                <div class="hidden group-hover:block absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-xs rounded-lg p-2.5 shadow-xl z-30 border border-gray-700">
-                                                    <p class="font-bold text-[10px] uppercase text-gray-400 mb-1.5 border-b border-gray-800 pb-1">Donation History ({{ history_list|length }})</p>
-                                                    <ul class="space-y-1 max-h-40 overflow-y-auto">
-                                                        {% for h in history_list %}
-                                                            <li class="flex items-center justify-between text-gray-200 py-0.5">
-                                                                <span class="flex items-center space-x-1">
-                                                                    <i class="fa-solid fa-droplet text-red-500 text-[9px]"></i>
-                                                                    <span>{{ h.donation_date }}</span>
-                                                                </span>
-                                                                {% if loop.first %}
-                                                                    <span class="text-[9px] font-bold text-emerald-400">Latest</span>
-                                                                {% endif %}
-                                                            </li>
-                                                        {% endfor %}
-                                                    </ul>
-                                                </div>
+                                        <span class="font-medium text-xs flex items-center space-x-1">
+                                            <span>{{ donor.last_donation_date }}</span>
+                                            {% if history_list|length > 1 %}
+                                                <i class="fa-solid fa-clock-rotate-left text-[10px] text-brand-600"></i>
                                             {% endif %}
-                                        </div>
+                                        </span>
                                     {% else %}
                                         <span class="text-xs text-gray-400 italic">N/A</span>
                                     {% endif %}
@@ -320,7 +317,7 @@
                                 </td>
 
                                 <!-- Availability Toggle -->
-                                <td class="py-3.5 px-4">
+                                <td class="py-3.5 px-4" onclick="event.stopPropagation();">
                                     {% if current_user.role in ['admin', 'subadmin'] %}
                                         <form method="POST" action="{{ url_for('toggle_status', id=donor.id) }}">
                                             <button type="submit" title="Click to toggle availability"
@@ -337,11 +334,11 @@
                                     {% endif %}
                                 </td>
 
-                                <!-- Actions (Edit / Delete) for Admins & Sub-Admins -->
+                                <!-- Actions (Edit / Delete) -->
                                 {% if current_user.role in ['admin', 'subadmin'] %}
-                                    <td class="py-3.5 px-4 text-right">
+                                    <td class="py-3.5 px-4 text-right" onclick="event.stopPropagation();">
                                         <div class="flex items-center justify-end space-x-2">
-                                            <a href="{{ url_for('edit_donor', id=donor.id) }}" class="p-1.5 text-gray-500 hover:text-brand-600 hover:bg-red-50 rounded-lg transition" title="Edit Donor">
+                                            <a href="{{ url_for('edit_donor', id=donor.id) }}" class="p-1.5 text-gray-500 hover:text-brand-600 hover:bg-red-50 rounded-lg transition" title="Edit Donor Profile & History">
                                                 <i class="fa-solid fa-pen-to-square"></i>
                                             </a>
                                             <form method="POST" action="{{ url_for('delete_donor', id=donor.id) }}" onsubmit="return confirm('Are you sure you want to delete donor {{ donor.name }}?');">
@@ -391,5 +388,174 @@
     </div>
 
 {% endif %}
+
+<!-- Interactive Donor Details Pop-up Modal -->
+<div id="donorModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity" onclick="if(event.target === this) closeDonorModal();">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-100 transform transition-all scale-95 opacity-0 duration-200" id="donorModalCard">
+        
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-brand-900 via-brand-800 to-gray-900 text-white p-6 relative">
+            <button onclick="closeDonorModal()" class="absolute top-4 right-4 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition">
+                <i class="fa-solid fa-xmark text-base"></i>
+            </button>
+            <div class="flex items-center space-x-4">
+                <div id="modalBloodGroup" class="w-14 h-14 rounded-2xl bg-white text-brand-700 flex items-center justify-center font-black text-xl shadow-lg border-2 border-red-200 flex-shrink-0">
+                    A+
+                </div>
+                <div>
+                    <h3 id="modalName" class="text-xl font-extrabold text-white">Donor Name</h3>
+                    <div class="flex items-center space-x-2 mt-1.5">
+                        <span id="modalBadhon" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-900">
+                            Badhon Member
+                        </span>
+                        <span id="modalAvailability" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900">
+                            Available
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 space-y-5">
+            <!-- Information Grid -->
+            <div class="grid grid-cols-2 gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-100 text-xs">
+                <div>
+                    <span class="text-gray-400 font-semibold block text-[10px] uppercase tracking-wider">Department</span>
+                    <strong id="modalDepartment" class="text-gray-900 text-sm font-bold">CSE</strong>
+                </div>
+                <div>
+                    <span class="text-gray-400 font-semibold block text-[10px] uppercase tracking-wider">Academic Session</span>
+                    <strong id="modalSession" class="text-gray-900 text-sm font-bold">2020-21</strong>
+                </div>
+                <div>
+                    <span class="text-gray-400 font-semibold block text-[10px] uppercase tracking-wider">Last Donation Date</span>
+                    <strong id="modalLastDonation" class="text-gray-900 text-sm font-bold">2026-05-12</strong>
+                </div>
+                <div>
+                    <span class="text-gray-400 font-semibold block text-[10px] uppercase tracking-wider">Total Times Donated</span>
+                    <strong id="modalTotalDonations" class="text-brand-700 text-sm font-bold">4 times</strong>
+                </div>
+            </div>
+
+            <!-- Phone Call Button -->
+            <a id="modalPhoneLink" href="#" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow transition flex items-center justify-center space-x-2 text-sm">
+                <i class="fa-solid fa-phone text-sm"></i>
+                <span id="modalPhone">Call Donor</span>
+            </a>
+
+            <!-- Recorded History -->
+            <div>
+                <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center space-x-1.5">
+                    <i class="fa-solid fa-clock-rotate-left text-brand-600"></i>
+                    <span>Recorded Donation Dates (Last 10)</span>
+                </h4>
+                <div id="modalHistoryList" class="bg-gray-50 rounded-xl p-3 max-h-36 overflow-y-auto text-xs space-y-1.5 border border-gray-200">
+                    <!-- Dynamic history items -->
+                </div>
+            </div>
+
+            <!-- Footer Action Controls -->
+            <div class="pt-2 border-t border-gray-100 flex items-center justify-between">
+                {% if current_user.role in ['admin', 'subadmin'] %}
+                    <a id="modalEditBtn" href="#" class="px-4 py-2 bg-brand-50 text-brand-700 hover:bg-brand-100 rounded-xl text-xs font-bold transition flex items-center space-x-1">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                        <span>Edit Donor Profile</span>
+                    </a>
+                {% else %}
+                    <div></div>
+                {% endif %}
+                <button onclick="closeDonorModal()" class="px-5 py-2 bg-gray-900 hover:bg-black text-white rounded-xl text-xs font-bold transition">
+                    Close
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+function openDonorModal(element) {
+    const data = element.dataset;
+    document.getElementById('modalName').textContent = data.name;
+    document.getElementById('modalBloodGroup').textContent = data.bloodGroup;
+    document.getElementById('modalDepartment').textContent = data.department;
+    document.getElementById('modalSession').textContent = data.session;
+    document.getElementById('modalLastDonation').textContent = data.lastDonation || 'N/A';
+    document.getElementById('modalTotalDonations').textContent = data.totalDonations ? (data.totalDonations + ' times') : 'N/A';
+    document.getElementById('modalPhone').textContent = data.phone;
+    document.getElementById('modalPhoneLink').href = 'tel:' + data.phone;
+    
+    const badhonBadge = document.getElementById('modalBadhon');
+    if (data.isBadhon === '1') {
+        badhonBadge.textContent = 'Badhon Member';
+        badhonBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-900 border border-purple-200';
+    } else {
+        badhonBadge.textContent = 'Non-Member';
+        badhonBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-gray-200 text-gray-700';
+    }
+
+    const availBadge = document.getElementById('modalAvailability');
+    if (data.isAvailable === '1') {
+        availBadge.textContent = 'Available';
+        availBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-200';
+    } else {
+        availBadge.textContent = 'Unavailable';
+        availBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-gray-200 text-gray-700';
+    }
+
+    const historyList = document.getElementById('modalHistoryList');
+    historyList.innerHTML = '';
+    let dates = [];
+    try {
+        dates = JSON.parse(data.history || '[]');
+    } catch(e) {
+        dates = [];
+    }
+    if (dates.length > 0) {
+        dates.forEach((h, idx) => {
+            const item = document.createElement('div');
+            item.className = 'flex items-center justify-between py-1 border-b border-gray-100 last:border-0';
+            item.innerHTML = `
+                <span class="flex items-center space-x-1.5 font-semibold text-gray-800">
+                    <i class="fa-solid fa-droplet text-brand-600 text-[10px]"></i>
+                    <span>${h.donation_date}</span>
+                </span>
+                ${idx === 0 ? '<span class="text-[9px] font-black text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Latest</span>' : ''}
+            `;
+            historyList.appendChild(item);
+        });
+    } else {
+        historyList.innerHTML = '<p class="text-gray-400 italic text-[11px] text-center">No recorded donation history dates available.</p>';
+    }
+
+    const editBtn = document.getElementById('modalEditBtn');
+    if (editBtn) {
+        editBtn.href = '/donor/' + data.id + '/edit';
+    }
+
+    const modal = document.getElementById('donorModal');
+    const card = document.getElementById('donorModalCard');
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        card.classList.remove('scale-95', 'opacity-0');
+        card.classList.add('scale-100', 'opacity-100');
+    }, 10);
+}
+
+function closeDonorModal() {
+    const modal = document.getElementById('donorModal');
+    const card = document.getElementById('donorModalCard');
+    card.classList.remove('scale-100', 'opacity-100');
+    card.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 200);
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeDonorModal();
+});
+</script>
 
 {% endblock %}
