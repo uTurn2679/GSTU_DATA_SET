@@ -151,9 +151,45 @@ def request_blood():
 @app.route('/admin/dashboard')
 @role_required(['admin', 'subadmin'])
 def admin_dashboard():
+    search_query = request.args.get('search', '').strip()
+    blood_group = request.args.get('blood_group', '').strip()
+    department = request.args.get('department', '').strip()
+    session_filter = request.args.get('session', '').strip()
+    badhon_filter = request.args.get('badhon', '').strip()
+    availability_filter = request.args.get('availability', '').strip()
+
+    donors = database.get_donors(
+        search=search_query,
+        blood_group=blood_group,
+        department=department,
+        session_val=session_filter,
+        badhon=badhon_filter,
+        availability=availability_filter
+    )
+    donor_histories = {d['id']: database.get_donation_history(d['id']) for d in donors}
+    stats = database.get_stats()
+    group_stats = {bg: stats['group_counts'].get(bg, 0) for bg in BLOOD_GROUPS}
+
     requests = database.get_blood_requests()
     subadmins = database.get_subadmins()
-    return render_template('admin_dashboard.html', requests=requests, subadmins=subadmins)
+
+    return render_template(
+        'admin_dashboard.html',
+        donors=donors,
+        donor_histories=donor_histories,
+        requests=requests,
+        subadmins=subadmins,
+        blood_groups=BLOOD_GROUPS,
+        departments=stats['departments'],
+        sessions=stats['sessions'],
+        group_stats=group_stats,
+        search_query=search_query,
+        selected_blood_group=blood_group,
+        selected_department=department,
+        selected_session=session_filter,
+        selected_badhon=badhon_filter,
+        selected_availability=availability_filter
+    )
 
 @app.route('/admin/subadmin/create', methods=['POST'])
 @role_required(['admin'])  # Only Super Admin HABIB2679 can create Sub-Admins
